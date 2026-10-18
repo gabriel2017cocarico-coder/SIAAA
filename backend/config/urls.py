@@ -27,7 +27,7 @@ urlpatterns = [
     # ======================================================
 
     path(
-        "admin/",
+        "django-admin/",
         admin.site.urls
     ),
 
