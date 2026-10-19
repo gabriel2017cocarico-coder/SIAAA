@@ -38,7 +38,7 @@
 
         <p>
           Ingrese sus credenciales institucionales
-          para acceder al sistema.
+          para acceder al sistema. - Version 2
         </p>
 
       </div>
