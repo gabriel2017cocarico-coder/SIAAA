@@ -247,6 +247,14 @@ class SolicitudCompraSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
+    def validate_monto_estimado(self, value):
+        # R01: ninguna compra de Caja Chica puede superar el límite del .env
+        if value is not None and value > LIMITE_CAJA_CHICA:
+            raise serializers.ValidationError(
+                f"El monto supera el límite de Caja Chica (Bs {LIMITE_CAJA_CHICA})."
+            )
+        return value
+
     def validate(self, attrs):
         # BPMN: la solicitud viaja respaldada por Informe, Proforma y POA.
         # El "pedido" se conserva como documento opcional del expediente.
@@ -278,6 +286,7 @@ class SolicitudCompraSerializer(serializers.ModelSerializer):
             })
 
         return attrs
+
 
 class SolicitudCompraResumenSerializer(serializers.ModelSerializer):
     """Resumen liviano usado por Mantenimiento/Soporte para
