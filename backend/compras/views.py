@@ -667,6 +667,44 @@ class SolicitudCompraViewSet(
             )
         return None
 
+    # ======================================================
+    # R09: FONDO MENSUAL DE CAJA CHICA Y SALDO
+    # ======================================================
+    #
+    # Fondo mensual: SIA_FONDO_MENSUAL (Bs 5.000). Se consideran
+    # gastadas las compras del mes ya aprobadas.
+    # Endpoint: GET /api/compras/solicitudes/saldo/
+    #
+    # ======================================================
+
+    ESTADOS_APROBADOS = [
+        "APROBADO_PARA_DESEMBOLSO", "FONDOS_DESEMBOLSADOS",
+        "COMPRA_REGISTRADA", "COMPRADO_Y_ENTREGADO",
+        "DESCARGO_PENDIENTE_LIQUIDACION", "CERRADO_ARCHIVADO",
+    ]
+
+    def _saldo_mes(self):
+        import os
+        from django.db.models import Sum
+        fondo = Decimal(os.environ.get("SIA_FONDO_MENSUAL", "5000"))
+        ahora = timezone.now()
+        gastado = (
+            SolicitudCompra.objects
+            .filter(
+                estado__in=self.ESTADOS_APROBADOS,
+                creado_en__year=ahora.year,
+                creado_en__month=ahora.month,
+            )
+            .aggregate(total=Sum("monto_estimado"))["total"]
+            or Decimal("0")
+        )
+        return {"fondo": fondo, "gastado": gastado, "saldo": fondo - gastado}
+
+    @action(detail=False, methods=["get"], url_path="saldo")
+    def saldo(self, request):
+        datos = self._saldo_mes()
+        return Response({clave: str(valor) for clave, valor in datos.items()})
+
     @action(detail=True, methods=["post"], url_path="visto-bueno-director")
     def visto_bueno_director(self, request, pk=None):
         # Igual que certificar-daf: al dar el visto bueno, el expediente
@@ -675,6 +713,14 @@ class SolicitudCompraViewSet(
         error = self._validar_aprobador(request, solicitud)
         if error:
             return error
+        # R09: no se aprueba si deja el saldo del mes en negativo.
+        saldo = self._saldo_mes()["saldo"]
+        monto = solicitud.monto_estimado or Decimal("0")
+        if monto > saldo:
+            return Response(
+                {"detalle": f"Saldo insuficiente en Caja Chica: disponible Bs {saldo}, solicitado Bs {monto}."},
+                status=status.HTTP_409_CONFLICT,
+            )
         return self._transicion(request, solicitud, "DAR_VISTO_BUENO", ["VERIFICADO_PENDIENTE_AUTORIZACION"], "APROBADO_PARA_DESEMBOLSO", "VISTO_BUENO_DIRECTOR", "Director autorizó; expediente derivado automáticamente a Tesorería para desembolso.")
 
     @action(detail=True, methods=["post"], url_path="rechazar")
