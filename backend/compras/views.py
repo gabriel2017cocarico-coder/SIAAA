@@ -615,6 +615,22 @@ class SolicitudCompraViewSet(
         faltantes = documentos_faltantes(solicitud)
         if faltantes:
             return Response({"detalle": "Documentos faltantes: " + ", ".join(faltantes) + "."}, status=400)
+        # R02: compras mayores a Bs 500 necesitan 3 cotizaciones
+        # de proveedores distintos antes de ir a aprobación.
+        if solicitud.monto_estimado is not None and solicitud.monto_estimado > Decimal("500"):
+            proveedores = {
+                p.strip().upper()
+                for p in solicitud.cotizaciones.values_list("proveedor", flat=True)
+                if p and p.strip()
+            }
+            if len(proveedores) < 3:
+                return Response(
+                    {"detalle": (
+                        "Las compras mayores a Bs 500 requieren 3 cotizaciones "
+                        f"de proveedores distintos. Registradas: {len(proveedores)}."
+                    )},
+                    status=400,
+                )
         solicitud.certificacion_presupuestaria = archivo
         solicitud.save(update_fields=["certificacion_presupuestaria", "actualizado_en"])
         # Emitida la certificación, el expediente queda disponible para la
