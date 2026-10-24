@@ -519,6 +519,62 @@ class TicketViewSet(
         )
         return respuesta_ticket(ticket, f"Estado cambiado a {estado_destino.nombre}.")
 
+    # ======================================================
+    # R06: REAPERTURA DENTRO DE 7 DÍAS
+    # ======================================================
+    #
+    # El solicitante puede reabrir su ticket Cerrado solo
+    # dentro de SIA_DIAS_REAPERTURA (7) días desde cerrado_en.
+    # El ticket vuelve a En proceso (EN_EJECUCION).
+    #
+    # ======================================================
+
+    @action(detail=True, methods=["post"], url_path="reabrir")
+    def reabrir(self, request, pk=None):
+        import os
+
+        ticket = self.get_object()
+
+        if ticket.solicitante_id != request.user.id:
+            return Response(
+                {"detalle": "Solo el solicitante puede reabrir su ticket."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if ticket.estado.codigo != "CERRADO":
+            return Response(
+                {"detalle": "Solo se puede reabrir un ticket Cerrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        dias = int(os.environ.get("SIA_DIAS_REAPERTURA", "7"))
+        if not ticket.cerrado_en or timezone.now() - ticket.cerrado_en > timedelta(days=dias):
+            return Response(
+                {"detalle": f"El plazo de reapertura de {dias} días ya venció."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        estado_proceso = obtener_estado("EN_EJECUCION")
+        if not estado_proceso:
+            return Response(
+                {"detalle": "No existe el estado EN_EJECUCION."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ticket.estado = estado_proceso
+        ticket.activo = True
+        ticket.rework_count += 1
+        ticket.save(update_fields=["estado", "activo", "rework_count", "actualizado_en"])
+
+        registrar_bitacora(
+            request=request,
+            accion="REABRIR_TICKET",
+            modulo="Soporte Técnico",
+            detalle=f"{ticket.codigo}: reabierto por el solicitante.",
+            nivel="INFO",
+        )
+        return respuesta_ticket(ticket, "Ticket reabierto. Vuelve a En proceso.")
+
     serializer_class = (
         TicketSerializer
     )
