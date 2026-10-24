@@ -637,11 +637,45 @@ class SolicitudCompraViewSet(
         # autorización del Director (BPMN: DAF -> DIRECTOR, sin escalas).
         return self._transicion(request, solicitud, "CERTIFICAR_PRESUPUESTO", ["EVALUADO_PENDIENTE_CERTIFICACION"], "VERIFICADO_PENDIENTE_AUTORIZACION", "CERTIFICAR_PRESUPUESTO", "Certificación emitida; expediente derivado al Director para autorizar la compra.")
 
+    # ======================================================
+    # R08: APROBACIÓN POR EL JEFE ADMINISTRATIVO
+    # ======================================================
+    #
+    # Las compras mayores a Bs 300 solo las aprueba un usuario
+    # del grupo "Jefe administrativo", y nadie puede aprobar
+    # su propia compra.
+    #
+    # ======================================================
+
+    GRUPO_JEFE_ADMINISTRATIVO = "Jefe administrativo"
+    MONTO_APROBACION_JEFE = Decimal("300")
+
+    def _es_jefe_administrativo(self, usuario):
+        return usuario.groups.filter(name=self.GRUPO_JEFE_ADMINISTRATIVO).exists()
+
+    def _validar_aprobador(self, request, solicitud):
+        if solicitud.solicitante_id == request.user.id:
+            return Response({"detalle": "Nadie puede aprobar su propia compra."}, status=status.HTTP_403_FORBIDDEN)
+        if (
+            solicitud.monto_estimado is not None
+            and solicitud.monto_estimado > self.MONTO_APROBACION_JEFE
+            and not self._es_jefe_administrativo(request.user)
+        ):
+            return Response(
+                {"detalle": "Las compras mayores a Bs 300 solo las aprueba el Jefe administrativo."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
     @action(detail=True, methods=["post"], url_path="visto-bueno-director")
     def visto_bueno_director(self, request, pk=None):
         # Igual que certificar-daf: al dar el visto bueno, el expediente
         # queda automáticamente disponible para Tesorería (desembolso).
-        return self._transicion(request, self.get_object(), "DAR_VISTO_BUENO", ["VERIFICADO_PENDIENTE_AUTORIZACION"], "APROBADO_PARA_DESEMBOLSO", "VISTO_BUENO_DIRECTOR", "Director autorizó; expediente derivado automáticamente a Tesorería para desembolso.")
+        solicitud = self.get_object()
+        error = self._validar_aprobador(request, solicitud)
+        if error:
+            return error
+        return self._transicion(request, solicitud, "DAR_VISTO_BUENO", ["VERIFICADO_PENDIENTE_AUTORIZACION"], "APROBADO_PARA_DESEMBOLSO", "VISTO_BUENO_DIRECTOR", "Director autorizó; expediente derivado automáticamente a Tesorería para desembolso.")
 
     @action(detail=True, methods=["post"], url_path="rechazar")
     def rechazar(self, request, pk=None):
