@@ -584,6 +584,31 @@ class Ticket(models.Model):
 
 
     # ======================================================
+    # R03: PRIORIDAD ALTA AUTOMÁTICA POR CATEGORÍA
+    # ======================================================
+    #
+    # Los tickets de Red o Servidores se guardan siempre con
+    # prioridad ALTA, sin importar lo que envíe el usuario.
+    #
+    # ======================================================
+
+    CATEGORIAS_PRIORIDAD_ALTA = ("RED", "SERVIDOR")
+
+    def requiere_prioridad_alta(self):
+        if self.tipo_problema == "RED":
+            return True
+        if self.categoria_id:
+            texto = f"{self.categoria.codigo} {self.categoria.nombre}".upper()
+            return any(c in texto for c in self.CATEGORIAS_PRIORIDAD_ALTA)
+        return False
+
+    def save(self, *args, **kwargs):
+        if self.requiere_prioridad_alta():
+            self.prioridad = "ALTA"
+        super().save(*args, **kwargs)
+
+
+    # ======================================================
     # REPRESENTACIÓN
     # ======================================================
 
