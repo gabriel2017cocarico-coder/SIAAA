@@ -1,7 +1,10 @@
+import os
 from datetime import timedelta
 
 from django.conf import settings
-from django.db import models
+from django.contrib.auth import get_user_model
+from django.db import models, transaction
+from rest_framework.exceptions import ValidationError as ApiValidationError
 from django.utils import timezone
 
 from usuarios.models import Area
@@ -639,11 +642,57 @@ class Ticket(models.Model):
             return False
         return timezone.now() > self.sla_fecha_limite
 
+    # ======================================================
+    # R07: MÁXIMO DE TICKETS ACTIVOS POR TÉCNICO
+    # ======================================================
+    #
+    # Un técnico no puede tener más de SIA_MAX_TICKETS_TECNICO
+    # (5) tickets activos. Se bloquea la fila del técnico con
+    # select_for_update para que dos asignaciones simultáneas
+    # no superen el límite.
+    #
+    # ======================================================
+
+    MAX_TICKETS_TECNICO = int(os.environ.get("SIA_MAX_TICKETS_TECNICO", "5"))
+    ESTADOS_NO_ACTIVOS = ("RESUELTO", "CERRADO", "ANULADO")
+
+    def _tecnico_cambio(self):
+        if not self.tecnico_asignado_id:
+            return False
+        if not self.pk:
+            return True
+        anterior = (
+            Ticket.objects.filter(pk=self.pk)
+            .values_list("tecnico_asignado_id", flat=True)
+            .first()
+        )
+        return anterior != self.tecnico_asignado_id
+
+    def validar_carga_tecnico(self):
+        get_user_model().objects.select_for_update().get(pk=self.tecnico_asignado_id)
+        activos = (
+            Ticket.objects.filter(tecnico_asignado_id=self.tecnico_asignado_id)
+            .exclude(pk=self.pk)
+            .exclude(estado__es_terminal=True)
+            .exclude(estado__codigo__in=self.ESTADOS_NO_ACTIVOS)
+            .count()
+        )
+        if activos >= self.MAX_TICKETS_TECNICO:
+            raise ApiValidationError({
+                "tecnico_asignado": (
+                    f"El técnico ya tiene {activos} tickets activos "
+                    f"(máximo {self.MAX_TICKETS_TECNICO})."
+                )
+            })
+
     def save(self, *args, **kwargs):
         if self.requiere_prioridad_alta():
             self.prioridad = "ALTA"
         self.calcular_sla()
-        super().save(*args, **kwargs)
+        with transaction.atomic():
+            if self._tecnico_cambio():
+                self.validar_carga_tecnico()
+            super().save(*args, **kwargs)
 
 
     # ======================================================
