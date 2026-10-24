@@ -450,6 +450,75 @@ class TicketViewSet(
     def documento_pdf(self, request, pk=None, documento_id=None):
         return pdf_documento(self, request, pk, documento_id)
 
+    # ======================================================
+    # R05: FLUJO DE ESTADOS CONTROLADO
+    # ======================================================
+    #
+    # Solo se permiten:
+    #   Abierto -> En proceso -> Resuelto -> Cerrado
+    #   Resuelto -> En proceso
+    # Para pasar a Resuelto es obligatorio un comentario
+    # de solución.
+    #
+    # Abierto = NUEVO, En proceso = EN_EJECUCION,
+    # Resuelto = RESUELTO, Cerrado = CERRADO.
+    #
+    # ======================================================
+
+    TRANSICIONES_PERMITIDAS = {
+        "NUEVO": {"EN_EJECUCION"},
+        "EN_EJECUCION": {"RESUELTO"},
+        "RESUELTO": {"CERRADO", "EN_EJECUCION"},
+    }
+
+    @action(detail=True, methods=["post"], url_path="cambiar-estado")
+    def cambiar_estado(self, request, pk=None):
+        if not puede_operar_soporte(request.user):
+            return respuesta_sin_permiso("VER_SOPORTE_TECNICO")
+
+        ticket = self.get_object()
+        origen = ticket.estado.codigo
+        destino = str(request.data.get("estado", "")).strip().upper()
+
+        if destino not in self.TRANSICIONES_PERMITIDAS.get(origen, set()):
+            return Response(
+                {"detalle": f"Transición no permitida: {origen} -> {destino}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        solucion = str(request.data.get("solucion", "")).strip()
+        if destino == "RESUELTO" and not solucion:
+            return Response(
+                {"solucion": "Para pasar a Resuelto debe registrar el comentario de solución."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        estado_destino = obtener_estado(destino)
+        if not estado_destino:
+            return Response(
+                {"detalle": f"No existe el estado {destino}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ticket.estado = estado_destino
+        campos = ["estado", "actualizado_en"]
+        if solucion:
+            ticket.solucion = solucion
+            campos.append("solucion")
+        if destino == "CERRADO":
+            ticket.cerrado_en = timezone.now()
+            campos.append("cerrado_en")
+        ticket.save(update_fields=campos)
+
+        registrar_bitacora(
+            request=request,
+            accion="CAMBIAR_ESTADO_TICKET",
+            modulo="Soporte Técnico",
+            detalle=f"{ticket.codigo}: {origen} -> {destino}.",
+            nivel="INFO",
+        )
+        return respuesta_ticket(ticket, f"Estado cambiado a {estado_destino.nombre}.")
+
     serializer_class = (
         TicketSerializer
     )
@@ -642,6 +711,15 @@ class TicketViewSet(
         ticket = self.get_object()
 
         usuario = request.user
+
+
+        # R05: el estado no se cambia libremente por PATCH;
+        # debe usarse la acción cambiar-estado.
+        if "estado" in request.data:
+            return Response(
+                {"detalle": "El estado solo puede cambiarse con la acción cambiar-estado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
         # --------------------------------------------------
