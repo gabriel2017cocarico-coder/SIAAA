@@ -5,6 +5,10 @@ from rest_framework import serializers
 
 from .models import SolicitudCompra
 import re
+import os
+from decimal import Decimal
+
+LIMITE_CAJA_CHICA = Decimal(os.environ.get("SIA_LIMITE_CAJA_CHICA", "1000"))
 
 
 class MontoEstimadoField(serializers.DecimalField):
@@ -274,7 +278,6 @@ class SolicitudCompraSerializer(serializers.ModelSerializer):
             })
 
         return attrs
-
 
 class SolicitudCompraResumenSerializer(serializers.ModelSerializer):
     """Resumen liviano usado por Mantenimiento/Soporte para
