@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from usuarios.models import Area
 
@@ -602,9 +605,44 @@ class Ticket(models.Model):
             return any(c in texto for c in self.CATEGORIAS_PRIORIDAD_ALTA)
         return False
 
+    # ======================================================
+    # R04: PLAZO DE ATENCIÓN (SLA) SEGÚN PRIORIDAD
+    # ======================================================
+    #
+    # Alta 4 h, Media 24 h, Baja 72 h (Crítica 4 h).
+    # El ticket está "Vencido" si pasó la fecha límite y no
+    # está Resuelto ni Cerrado.
+    #
+    # ======================================================
+
+    SLA_HORAS_POR_PRIORIDAD = {
+        "CRITICA": 4,
+        "ALTA": 4,
+        "MEDIA": 24,
+        "BAJA": 72,
+    }
+
+    def calcular_sla(self):
+        horas = self.SLA_HORAS_POR_PRIORIDAD.get(self.prioridad)
+        if horas is None:
+            return
+        if self.sla_horas != horas or self.sla_fecha_limite is None:
+            inicio = self.creado_en or timezone.now()
+            self.sla_horas = horas
+            self.sla_fecha_limite = inicio + timedelta(hours=horas)
+
+    @property
+    def esta_vencido(self):
+        if not self.sla_fecha_limite:
+            return False
+        if self.estado_id and self.estado.codigo in ("RESUELTO", "CERRADO", "ANULADO"):
+            return False
+        return timezone.now() > self.sla_fecha_limite
+
     def save(self, *args, **kwargs):
         if self.requiere_prioridad_alta():
             self.prioridad = "ALTA"
+        self.calcular_sla()
         super().save(*args, **kwargs)
 
 
