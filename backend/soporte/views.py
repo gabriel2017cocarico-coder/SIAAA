@@ -1931,7 +1931,11 @@ class TicketViewSet(
                 {"costo_estimado": "Monto estimado inválido."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        # R01: límite de Caja Chica configurable (.env)
+        from compras.serializers import LIMITE_CAJA_CHICA
+        if costo_estimado is not None and costo_estimado > LIMITE_CAJA_CHICA:
+            mensaje = f"El monto supera el límite de Caja Chica (Bs {LIMITE_CAJA_CHICA})."
+            return Response({"detalle": mensaje, "costo_estimado": mensaje}, status=status.HTTP_400_BAD_REQUEST)
 
         ticket.requiere_compra = True
         ticket.cantidad_componente = cantidad
