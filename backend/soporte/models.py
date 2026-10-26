@@ -601,7 +601,7 @@ class Ticket(models.Model):
     CATEGORIAS_PRIORIDAD_ALTA = ("RED", "SERVIDOR")
 
     def requiere_prioridad_alta(self):
-        if self.tipo_problema == "RED":
+        if self.tipo_problema == "RED" or "PROYECTOR" in self.equipo_afectado.upper():
             return True
         if self.categoria_id:
             texto = f"{self.categoria.codigo} {self.categoria.nombre}".upper()
