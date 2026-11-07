@@ -94,6 +94,16 @@ urlpatterns = [
             "recuperacion.urls"
         )
     ),
+
+
+    # ======================================================
+    # ASISTENTE DE IA (OLLAMA)
+    # ======================================================
+
+    path(
+        "api/asistente/",
+        include("asistente.urls")
+    ),
 ]
 
 

@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     'mantenimiento',
     'compras',
     'recuperacion',
+    'asistente',
 ]
 
 
@@ -218,6 +219,25 @@ LOGIN_MINUTOS_BLOQUEO = 15
 # El token de DRF no expira por sí solo: se fuerza una vida
 # máxima de sesión para reducir la ventana de un token robado.
 SESION_TOKEN_HORAS_VALIDEZ = 12
+
+
+# ==========================================================
+# ASISTENTE DE IA (OLLAMA)
+# ==========================================================
+#
+# Motor de IA local. Si Ollama corre en otro equipo (p. ej. el
+# anfitrión de la VM), definir OLLAMA_URL=http://<IP>:11434.
+
+OLLAMA_URL = os.environ.get('OLLAMA_URL', 'http://127.0.0.1:11434')
+OLLAMA_MODELO = os.environ.get('OLLAMA_MODELO', 'sigta-ai')
+# Segundos máximos de espera por la respuesta del modelo.
+OLLAMA_TIMEOUT = int(os.environ.get('OLLAMA_TIMEOUT', '90'))
+# Tiempo que Ollama mantiene el modelo cargado en RAM entre
+# consultas (evita la demora de carga en cada pregunta).
+OLLAMA_KEEP_ALIVE = os.environ.get('OLLAMA_KEEP_ALIVE', '30m')
+# Límite de tokens de cada respuesta (respuestas breves = más rápidas).
+OLLAMA_MAX_TOKENS = int(os.environ.get('OLLAMA_MAX_TOKENS', '300'))
+ASISTENTE_MAX_CARACTERES = 1000
 
 
 # ==========================================================
