@@ -3,7 +3,7 @@
 **Proyecto:** SIGTA, Escuela Militar de Ingeniería, Unidad Académica Santa Cruz
 **Componente:** Asistente de IA local con Ollama (texto y voz)
 **Fecha:** 07/11/2026
-**Elaborado por:** Paola
+**Elaborado por:** Paola García
 
 ---
 

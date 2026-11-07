@@ -66,7 +66,6 @@ El asistente solo te muestra información que tú ya puedes ver en el sistema co
 |---|---|
 | 🔇 Silenciar | Detiene la lectura en voz alta. Las respuestas se siguen mostrando en pantalla |
 | 🔁 Repetir | Vuelve a leer en voz alta la última respuesta |
-
 | ✕ Cerrar (o tecla **Esc**) | Cierra el chat y detiene el micrófono y el audio. La conversación se conserva hasta que cierres sesión |
 
 ## 7. Ejemplos de preguntas

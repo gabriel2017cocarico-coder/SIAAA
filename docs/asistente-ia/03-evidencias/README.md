@@ -8,7 +8,7 @@ Aquí se guardan las capturas, bitácoras y reportes de las pruebas de calidad.
 03-evidencias/
 ├── capturas/        Imágenes PNG referenciadas en los manuales
 ├── bitacoras/       Registros diarios de trabajo y logs exportados
-└── reportes/        Reportes entregados por cada integrante del Grupo B
+└── reportes/        Reportes de pruebas (funcionales, rendimiento e integración)
 ```
 
 ## Convención de nombres
@@ -19,16 +19,16 @@ Aquí se guardan las capturas, bitácoras y reportes de las pruebas de calidad.
 |---|---|
 | 01–09 | Instalación de Ollama, red y modelo (manual técnico) |
 | 10–19 | Interfaz del asistente (manual de usuario) |
-| 20–39 | Pruebas E2E y de voz (Tte. Kantuta) |
-| 40–59 | Rendimiento (Tte. Carballo) |
-| 60–79 | Integración y red (Víctor Hugo) |
+| 20–39 | Pruebas E2E y de voz |
+| 40–59 | Rendimiento |
+| 60–79 | Integración y red |
 
 **Bitácoras:** `AAAA-MM-DD-responsable.md`, por ejemplo `2026-11-10-barrios.md`
 
 **Reportes:**
-- `reportes/matriz-pruebas-funcionales.md` (Tte. Kantuta)
-- `reportes/reporte-rendimiento.md` (Tte. Carballo)
-- `reportes/reporte-integracion.md` (Víctor Hugo)
+- `reportes/matriz-pruebas-funcionales.md`
+- `reportes/reporte-rendimiento.md`
+- `reportes/reporte-integracion.md`
 
 ## Evidencias recopiladas
 

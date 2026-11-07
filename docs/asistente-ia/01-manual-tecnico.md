@@ -5,7 +5,7 @@
 **Componente:** Asistente de IA local (Ollama + modelo `sigta-ai`) con interacción por texto y voz
 **Versión del documento:** 1.0
 **Fecha:** 07/11/2026
-**Elaborado por:** Paola, Grupo B
+**Elaborado por:** Paola García
 
 ---
 
@@ -91,7 +91,7 @@ No incluye el funcionamiento general de SIGTA, que está documentado en `ARQUITE
 
 > Sin GPU el modelo corre solo con el procesador y las respuestas tardan más. Ver la sección 10 (rendimiento).
 
-## 5. Instalación y configuración de Ollama (responsable: Barrios)
+## 5. Instalación y configuración de Ollama
 
 ### 5.1 Instalación
 
@@ -148,7 +148,7 @@ IP del anfitrión usada: `192.168.100.227`
 Resultado: `Ollama is running` en `/` y un JSON con `sigta-ai:latest` y `llama3.2:3b` en `/api/tags` (HTTP 200).
 Evidencia: `03-evidencias/capturas/04-ollama-version-modelos-red.png`
 
-## 6. Modelo especializado `sigta-ai` (responsable: Caillavi)
+## 6. Modelo especializado `sigta-ai`
 
 ### 6.1 Modelo base
 
@@ -204,7 +204,7 @@ Evidencia: `03-evidencias/capturas/04-ollama-version-modelos-red.png` (`ollama l
 
 > **Ajuste iterativo:** el Modelfile se mejoró en 5 iteraciones medidas con el banco de 20 preguntas (ver `03-evidencias/reportes/matriz-pruebas-funcionales.md`, sección 4).
 
-## 7. Módulo backend `asistente` (responsable: Cocarico)
+## 7. Módulo backend `asistente`
 
 ### 7.1 Estructura
 
@@ -308,7 +308,7 @@ Si Ollama falla antes de empezar, `/chat/stream/` responde con el mismo JSON de 
 
 > Criterio de calidad: ante una caída de Ollama el backend **nunca** debe devolver un error 500 no controlado.
 
-## 8. Componente frontend `AsistenteVozModal.vue` (responsable: Deybi)
+## 8. Componente frontend `AsistenteVozModal.vue`
 
 ### 8.1 Ubicación
 
