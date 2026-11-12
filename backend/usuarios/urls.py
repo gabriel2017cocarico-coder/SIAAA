@@ -24,6 +24,14 @@ from .views import (
     cambiar_password_obligatorio,
 )
 
+from .views_face import (
+    face_register,
+    face_verify,
+    face_disable,
+    face_status,
+    face_login,
+)
+
 
 # ==========================================================
 # ROUTER
@@ -129,6 +137,41 @@ urlpatterns = [
         "login/",
         login_view,
         name="login"
+    ),
+
+
+    # ------------------------------------------------------
+    # AUTENTICACIÓN FACIAL (2FA)
+    # ------------------------------------------------------
+
+    path(
+        "face-register/",
+        face_register,
+        name="face-register"
+    ),
+
+    path(
+        "face-verify/",
+        face_verify,
+        name="face-verify"
+    ),
+
+    path(
+        "face-disable/",
+        face_disable,
+        name="face-disable"
+    ),
+
+    path(
+        "face-status/",
+        face_status,
+        name="face-status"
+    ),
+
+    path(
+        "face-login/",
+        face_login,
+        name="face-login"
     ),
 
 

@@ -194,6 +194,7 @@ PASSWORD_HASHERS = [
 # VALIDACIÓN DE CONTRASEÑAS
 # ==========================================================
 
+# R10: política de contraseñas
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
@@ -219,6 +220,20 @@ LOGIN_MINUTOS_BLOQUEO = 15
 # El token de DRF no expira por sí solo: se fuerza una vida
 # máxima de sesión para reducir la ventana de un token robado.
 SESION_TOKEN_HORAS_VALIDEZ = 12
+
+
+# ==========================================================
+# AUTENTICACIÓN FACIAL (2FA)
+# ==========================================================
+
+# Intentos máximos antes de bloquear verificación facial
+FACE_2FA_MAX_INTENTOS = 3
+
+# Minutos de bloqueo tras exceder intentos
+FACE_2FA_MINUTOS_BLOQUEO = 30
+
+# Minutos de validez del token temporal (entre password y face)
+FACE_2FA_TOKEN_MINUTOS = 5
 
 
 # ==========================================================

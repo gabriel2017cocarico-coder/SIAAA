@@ -9,3 +9,7 @@ pycparser==3.0
 sqlparse==0.6.0
 tzdata==2026.3
 reportlab==5.0.1
+
+# Reconocimiento facial (2FA)
+opencv-contrib-python==4.10.0.84
+numpy>=2.0.0

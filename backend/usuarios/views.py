@@ -1,7 +1,9 @@
+import secrets
 from datetime import timedelta
 
 
 from django.conf import settings
+from django.core.cache import cache
 from django.contrib.auth import authenticate, password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
@@ -1746,6 +1748,90 @@ def login_view(
     permisos = obtener_permisos_usuario(
         usuario
     )
+
+
+    # ======================================================
+    # VERIFICAR 2FA FACIAL
+    # ======================================================
+
+    if (
+        usuario.face_2fa_enabled
+        and usuario.face_embedding
+    ):
+
+        # Generar token temporal para el paso de verificación facial
+        face_token = secrets.token_urlsafe(32)
+        cache_key = f"face_2fa_{face_token}"
+
+        # Datos del usuario para retornar después de verificar rostro
+        usuario_data = {
+            "id":
+                usuario.id,
+
+            "nombre":
+                usuario.nombre_completo,
+
+            "nombre_completo":
+                usuario.nombre_completo,
+
+            "email":
+                usuario.email,
+
+            "must_change_password":
+                usuario.must_change_password,
+
+            "roles":
+                roles,
+
+            "permisos":
+                permisos,
+        }
+
+        # Guardar en cache (expira en N minutos)
+        minutos = getattr(settings, "FACE_2FA_TOKEN_MINUTOS", 5)
+
+        cache.set(
+            cache_key,
+            {
+                "user_id": usuario.id,
+                "usuario_data": usuario_data,
+            },
+            timeout=minutos * 60
+        )
+
+        registrar_bitacora(
+            request=request,
+            usuario=usuario,
+            accion=
+                "LOGIN_REQUIRES_2FA",
+            modulo=
+                "Autenticación",
+            detalle=(
+                "Contraseña correcta, requiere verificación facial."
+            ),
+            nivel=
+                "INFO",
+        )
+
+        return Response(
+            {
+                "ok":
+                    True,
+
+                "requires_2fa":
+                    True,
+
+                "face_token":
+                    face_token,
+
+                "usuario": {
+                    "nombre":
+                        usuario.nombre_completo,
+                }
+            },
+            status=
+                status.HTTP_200_OK
+        )
 
 
     # ======================================================

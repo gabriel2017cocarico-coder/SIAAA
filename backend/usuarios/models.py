@@ -50,6 +50,38 @@ class Usuario(AbstractUser):
         auto_now=True
     )
 
+    # ==========================================================
+    # AUTENTICACIÓN FACIAL (2FA)
+    # ==========================================================
+
+    face_embedding = models.BinaryField(
+        null=True,
+        blank=True,
+        verbose_name="Embedding facial"
+    )
+
+    face_registered_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Rostro registrado en"
+    )
+
+    face_2fa_enabled = models.BooleanField(
+        default=False,
+        verbose_name="2FA facial habilitado"
+    )
+
+    failed_face_attempts = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name="Intentos faciales fallidos"
+    )
+
+    face_locked_until = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Verificación facial bloqueada hasta"
+    )
+
     USERNAME_FIELD = "email"
 
     REQUIRED_FIELDS = [
