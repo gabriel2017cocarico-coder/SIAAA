@@ -1,3 +1,5 @@
+import os
+
 from usuarios.documentos import documentar, documentos_expediente, pdf_documento
 from decimal import Decimal, InvalidOperation
 

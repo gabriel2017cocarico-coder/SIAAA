@@ -48,7 +48,7 @@ El sistema cuenta con un Asistente Virtual de IA integrado globalmente:
 
 ### Para habilitar el modelo de IA local con Ollama (Opcional):
 ```powershell
-ollama pull llama3.2:3b
+ollama pull llama3.1:latest
 ollama create sigta-ai -f .\Modelfile
 ollama run sigta-ai
 ```
