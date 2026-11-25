@@ -1,12 +1,14 @@
 <template>
   <RouterView />
   <FirmaDialogo />
+  <BotonTutorialRol />
   <AsistenteChat />
 </template>
 
 <script setup>
 import { RouterView } from 'vue-router'
 import FirmaDialogo from './components/FirmaDialogo.vue'
+import BotonTutorialRol from './components/BotonTutorialRol.vue'
 import AsistenteChat from './components/AsistenteChat.vue'
 </script>
 

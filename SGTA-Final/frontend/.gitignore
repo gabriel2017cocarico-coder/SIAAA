@@ -37,3 +37,7 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Tutorial videos (served directly on nginx, too large for git)
+public/videos/tutoriales/*.mp4
+
