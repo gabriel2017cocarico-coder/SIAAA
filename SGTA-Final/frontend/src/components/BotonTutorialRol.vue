@@ -95,7 +95,8 @@ const rolActivo = computed(() => {
   if (path.startsWith('/tesoreria')) return 'TESORERIA'
   if (path.startsWith('/almacen')) return 'ENCARGADO_COMPRAS_ALMACEN'
   if (path.startsWith('/daf')) return 'DAF'
-  if (path.startsWith('/admin') || path.startsWith('/superuser')) return 'ADMIN'
+  if (path.startsWith('/superuser')) return 'SUPERUSER'
+  if (path.startsWith('/admin')) return 'ADMIN'
   if (path.startsWith('/usuario')) return 'SOLICITANTE'
 
   try {
