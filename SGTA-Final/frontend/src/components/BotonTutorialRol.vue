@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -144,7 +144,19 @@ const videoRef = ref(null)
 const rawToken = ref(localStorage.getItem('sigta_token') || '')
 const rawUsuario = ref(localStorage.getItem('sigta_usuario') || '')
 
+function actualizarSesion() {
+  rawToken.value = localStorage.getItem('sigta_token') || ''
+  rawUsuario.value = localStorage.getItem('sigta_usuario') || ''
+}
+
+watch(() => route.path, () => {
+  actualizarSesion()
+})
+
 const autenticado = computed(() => {
+  if (!route.path || route.path === '/login' || route.path === '/recuperar-contrasena') {
+    return false
+  }
   return !!(rawToken.value || localStorage.getItem('sigta_token'))
 })
 
@@ -346,14 +358,31 @@ function saltarATiempo(segundos) {
 function onVideoPlay() {}
 function onVideoPause() {}
 
-onMounted(() => {
-  // Mostrar tooltip solo una vez al iniciar sesión
+let sessionTimer = null
+
+function evaluarTooltip() {
   const visto = localStorage.getItem('sia_tutorial_tooltip_visto')
   if (!visto && autenticado.value) {
     setTimeout(() => {
-      if (!modalAbierto.value) mostrarTooltip.value = true
+      if (!modalAbierto.value && autenticado.value) mostrarTooltip.value = true
     }, 2500)
   }
+}
+
+watch(autenticado, (nuevo) => {
+  if (nuevo) evaluarTooltip()
+})
+
+onMounted(() => {
+  actualizarSesion()
+  window.addEventListener('storage', actualizarSesion)
+  sessionTimer = setInterval(actualizarSesion, 1000)
+  evaluarTooltip()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('storage', actualizarSesion)
+  if (sessionTimer) clearInterval(sessionTimer)
 })
 </script>
 
